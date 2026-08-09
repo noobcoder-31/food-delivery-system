@@ -4,6 +4,7 @@ import com.raj.authservice.dto.RegisterRequest;
 import com.raj.authservice.dto.RegisterResponse;
 import com.raj.authservice.entity.UserEntity;
 import com.raj.authservice.enums.Role;
+import com.raj.authservice.exception.EmailAlreadyExistException;
 import com.raj.authservice.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class AuthService {
 
     public RegisterResponse registerUser(RegisterRequest request){
         if(userRepo.existsByEmail(request.getEmail())){
-            throw  new RuntimeException("Email already exists");
+            throw  new EmailAlreadyExistException("Email already exists");
         }
 
         String passHash = passwordEncoder.encode(request.getPassword());
