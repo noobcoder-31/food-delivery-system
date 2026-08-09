@@ -1,21 +1,21 @@
 package com.raj.authservice.exception;
 
 public class ErrorResponse {
-    private int status;
+    private String status;
     private String message;
     private String errors;
 
-    public int getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public ErrorResponse(int status, String message, String errors) {
+    public ErrorResponse(String status, String message, String errors) {
         this.status = status;
         this.message = message;
         this.errors = errors;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
