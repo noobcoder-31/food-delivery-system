@@ -9,8 +9,10 @@ import com.raj.authservice.enums.Role;
 import com.raj.authservice.exception.EmailAlreadyExistException;
 import com.raj.authservice.exception.InvalidCredentialsException;
 import com.raj.authservice.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,14 +20,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+    private  JwtService jwtService;
     private UserRepository userRepo;
     private PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepo, PasswordEncoder passwordEncoder,AuthenticationManager authenticationManager){
+    public AuthService(UserRepository userRepo, PasswordEncoder passwordEncoder,AuthenticationManager authenticationManager,JwtService jwtService){
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     public RegisterResponse registerUser(RegisterRequest request){
@@ -45,15 +49,19 @@ public class AuthService {
 
     public LoginResponse loginUser(LoginRequest request){
 
-        authenticationManager.authenticate(
+       Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()
                 )
         );
 
+       String token = jwtService.generateToken(authentication);
+
         LoginResponse response = new LoginResponse();
         response.setMessage("Logged In Successfully!");
+        response.setAccessToken(token);
+        response.setTokenType("Bearer");
 
         return response;
 
