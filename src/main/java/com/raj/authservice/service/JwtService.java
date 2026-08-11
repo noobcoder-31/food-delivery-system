@@ -48,4 +48,39 @@ public class JwtService {
                 secret.getBytes(StandardCharsets.UTF_8)
         );
     }
+
+    public String getUsername(String token) {
+
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    public boolean isTokenValid(
+            String token,
+            UserDetails userDetails) {
+
+        String username = getUsername(token);
+
+        return username.equals(userDetails.getUsername())
+                && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration();
+    }
 }
