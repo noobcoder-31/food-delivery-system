@@ -7,6 +7,7 @@ import com.raj.authservice.dto.RegisterResponse;
 import com.raj.authservice.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('ADMIN')")
     public String getCurrentUser(Authentication authentication) {
         return authentication.getName();
     }
