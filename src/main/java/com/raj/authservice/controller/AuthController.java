@@ -34,7 +34,9 @@ public class AuthController {
         return authService.loginUser(request);
     }
 
+
     @GetMapping("/me")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDataResponse> getCurrentUser(Authentication authentication) {
         String email = authentication.getName();
 

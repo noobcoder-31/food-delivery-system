@@ -1,5 +1,7 @@
 package com.raj.authservice.config;
 
+import com.raj.authservice.Security.CustomAccessDeniedHandler;
+import com.raj.authservice.Security.CustomAuthenticationEntryPoint;
 import com.raj.authservice.Security.JwtAuthenticationFilter;
 import com.raj.authservice.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,11 +24,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
     public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAccessDeniedHandler accessDeniedHandler) {
 
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -47,30 +54,23 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
 
+                        .requestMatchers("/api/auth/me").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
-                )
-                // in case of no token and token not valid will send 401 instead of 403
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(
-                                (request, response, authException) -> {
-                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                    response.setContentType("application/json");
-                                    response.getWriter().write(
-                                            "{\"status\":401,\"message\":\"Unauthorized\"}"
-                                    );
-                                }
-                        )
                 )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 );
 
         return http.build();
