@@ -3,8 +3,18 @@ package com.raj.authservice.dto;
 public class LoginResponse {
 
     String accessToken;
+    String refreshToken;
     String tokenType;
     String message;
+
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 
     public String getAccessToken() {
         return accessToken;

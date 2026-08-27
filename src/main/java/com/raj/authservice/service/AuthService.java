@@ -4,6 +4,7 @@ import com.raj.authservice.dto.LoginRequest;
 import com.raj.authservice.dto.LoginResponse;
 import com.raj.authservice.dto.RegisterRequest;
 import com.raj.authservice.dto.RegisterResponse;
+import com.raj.authservice.entity.RefreshToken;
 import com.raj.authservice.entity.UserEntity;
 import com.raj.authservice.enums.Role;
 import com.raj.authservice.exception.EmailAlreadyExistException;
@@ -24,12 +25,14 @@ public class AuthService {
     private UserRepository userRepo;
     private PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private RefreshTokenService refreshTokenService;
 
-    public AuthService(UserRepository userRepo, PasswordEncoder passwordEncoder,AuthenticationManager authenticationManager,JwtService jwtService){
+    public AuthService(UserRepository userRepo, PasswordEncoder passwordEncoder,AuthenticationManager authenticationManager,JwtService jwtService,RefreshTokenService refreshTokenService){
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public RegisterResponse registerUser(RegisterRequest request){
@@ -57,10 +60,14 @@ public class AuthService {
         );
 
        String token = jwtService.generateToken(authentication);
+       UserEntity user = userRepo.findByEmail(request.getEmail()).orElseThrow(()-> new RuntimeException("User not found"));
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
 
         LoginResponse response = new LoginResponse();
         response.setMessage("Logged In Successfully!");
         response.setAccessToken(token);
+        response.setRefreshToken(refreshToken.getToken());
         response.setTokenType("Bearer");
 
         return response;
