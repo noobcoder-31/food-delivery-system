@@ -1,12 +1,18 @@
 package com.raj.authservice.controller;
 
 import com.raj.authservice.dto.*;
+import com.raj.authservice.entity.RefreshToken;
 import com.raj.authservice.entity.UserEntity;
 import com.raj.authservice.service.AuthService;
+import com.raj.authservice.service.CustomUserDetailsService;
+import com.raj.authservice.service.JwtService;
+import com.raj.authservice.service.RefreshTokenService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsChecker;
@@ -22,6 +28,18 @@ public class AuthController {
 
     @Autowired
     UserDetailsService userDetailsService;
+
+    @Autowired
+    RefreshTokenService refreshTokenService;
+
+    @Autowired
+    JwtService jwtService;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    CustomUserDetailsService customUserDetailsService;
 
 
     @PostMapping("/register")
@@ -47,6 +65,42 @@ public class AuthController {
                 .getAuthority();
         UserDataResponse userDataResponse = new UserDataResponse(user.getUsername(),role);
         return ResponseEntity.ok(userDataResponse);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshToken(
+            @RequestBody RefreshTokenRequest request) {
+
+        RefreshToken refreshToken =
+                refreshTokenService.verifyRefreshToken(
+                        request.getRefreshToken()
+                );
+
+        UserEntity user = refreshToken.getUser();
+
+        UserDetails userDetails =
+                customUserDetailsService.loadUserByUsername(user.getEmail());
+
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+
+        String accessToken =
+                jwtService.generateToken(
+                    authentication
+                );
+
+        LoginResponse response = new LoginResponse();
+        response.setRefreshToken(refreshToken.getToken());
+        response.setAccessToken(accessToken);
+
+
+        return ResponseEntity.ok(
+                response
+        );
     }
 
 }

@@ -42,4 +42,23 @@ public class RefreshTokenService {
 
         return refreshTokenRepository.save(refreshToken);
     }
+
+    public RefreshToken verifyRefreshToken(String token) {
+
+        RefreshToken refreshToken =
+                refreshTokenRepository.findByToken(token)
+                        .orElseThrow(() ->
+                                new RuntimeException("Invalid refresh token")
+                        );
+
+        if (refreshToken.isRevoked()) {
+            throw new RuntimeException("Refresh token has been revoked");
+        }
+
+        if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
+            throw new RuntimeException("Refresh token has expired");
+        }
+
+        return refreshToken;
+    }
 }
