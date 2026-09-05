@@ -71,32 +71,7 @@ public class AuthController {
     public ResponseEntity<LoginResponse> refreshToken(
             @RequestBody RefreshTokenRequest request) {
 
-        RefreshToken refreshToken =
-                refreshTokenService.verifyRefreshToken(
-                        request.getRefreshToken()
-                );
-
-        UserEntity user = refreshToken.getUser();
-
-        UserDetails userDetails =
-                customUserDetailsService.loadUserByUsername(user.getEmail());
-
-        Authentication authentication =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-
-        String accessToken =
-                jwtService.generateToken(
-                    authentication
-                );
-
-        LoginResponse response = new LoginResponse();
-        response.setRefreshToken(refreshToken.getToken());
-        response.setAccessToken(accessToken);
-
+        LoginResponse response = refreshTokenService.getToken(request);
 
         return ResponseEntity.ok(
                 response
